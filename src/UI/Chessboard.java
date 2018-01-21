@@ -32,6 +32,7 @@ public class Chessboard {
     private Player player1, player2, currTurn, nextTurn;
     private Set<JLabel> blocks;
     public Set<Chessman> allChessmenOnBoard;
+    public Chessman currSlected;
 
 
     // Constructor
@@ -83,6 +84,8 @@ public class Chessboard {
             for (Chessman cc:nextTurn.allChessmen) {
                 if (xx == cc.x && yy == cc.y) {
                     cc.label.setBorder(RED_BORDER);
+                    cc.clickable = true;
+                    cc.canBeCaptured = true;
                 }
             }
         }
@@ -111,6 +114,13 @@ public class Chessboard {
         board.repaint();
     }
 
+    public void removeChessman(Chessman c) {
+        allChessmenOnBoard.remove(c);
+        board.remove(c.label);
+        c.player.allChessmen.remove(c);
+        board.repaint(); //may be no need
+    }
+
     /**
      * make sure there is only one ChessBoard instance  **/
     public static Chessboard getInstance() {
@@ -132,6 +142,8 @@ public class Chessboard {
         currTurn = nextTurn;
         nextTurn = temp;
         currTurn.enableAllMouseListeners();
+        clearBlocks();
+        render();
     }
 
     // render all chessmen on the ChessBoard
@@ -155,19 +167,6 @@ public class Chessboard {
         frame.setVisible(true);
         // set up blocks
         blocks = new HashSet<>();
-//        for (int i = 0; i < 20; i++ ) {
-//            JLabel block = new JLabel();
-//            block.setLocation(-1, -1);
-//            block.setVisible(false);
-//            block.addMouseListener(new MouseAdapter() {
-//                @Override
-//                public void mouseClicked(MouseEvent e) {
-//                    super.mouseClicked(e);
-//                }
-//            });
-//            blocks.add(block);
-//            board.add(block);
-//        }
     }
 
     private static class MyDrawPanel extends JPanel {

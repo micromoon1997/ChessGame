@@ -14,14 +14,14 @@ import java.util.List;
  */
 
 public class Chessman {
-    public JLabel label;
-    public int x, y;
-    public boolean clickable;
-    public int forward;
     protected boolean isAlive;
     protected List<Step> possibleMoves;
     protected List<Step> possibleCaps;
-    private Player player;
+    public JLabel label;
+    public int x, y;
+    public boolean clickable, canBeCaptured;
+    public int forward;
+    public Player player;
 
     public Chessman(Player player) throws IOException{
         this.player = player;
@@ -70,13 +70,23 @@ public class Chessman {
             public void mouseClicked(MouseEvent e) {
                 if (!clickable)
                     return;
+                if (canBeCaptured) {
+                    for (Chessman c: player.allChessmen)
+                        c.canBeCaptured = false;
+                    Chessboard.getInstance().removeChessman(Chessman.this);
+                    Chessboard.getInstance().currSlected.setPosition(x, y);
+                    Chessboard.getInstance().switchTurn();
+                    return;
+                }
                 System.out.println(player.side);
                 //TODO
+                Chessboard.getInstance().currSlected = Chessman.this;
                 Chessboard.getInstance().clearBlocks();
                 Chessboard.getInstance().showValidSteps(Chessman.this, getPossibleMoves(), getPossibleCaps());
             }
         });
     }
+
 
     // set the x, y position of the chessman
     public void setPosition(int x, int y) {
