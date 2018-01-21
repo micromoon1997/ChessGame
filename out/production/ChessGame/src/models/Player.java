@@ -55,7 +55,7 @@ public class Player{
         else
             forward = 1;
         int firstRow = (int) Math.round(3.5 - forward * 2.5);
-        int seconRow = (int) Math.round(3.5 - forward * 3.5);
+        int secondRow = (int) Math.round(3.5 - forward * 3.5);
         p0.setPosition(0, firstRow);
         p1.setPosition(1, firstRow);
         p2.setPosition(2, firstRow);
@@ -64,14 +64,14 @@ public class Player{
         p5.setPosition(5, firstRow);
         p6.setPosition(6, firstRow);
         p7.setPosition(7, firstRow);
-        r0.setPosition(0, seconRow);
-        n0.setPosition(1, seconRow);
-        b0.setPosition(2, seconRow);
-        q0.setPosition(3, seconRow);
-        k0.setPosition(4, seconRow);
-        b1.setPosition(5, seconRow);
-        n1.setPosition(6, seconRow);
-        r1.setPosition(7, seconRow);
+        r0.setPosition(0, secondRow);
+        n0.setPosition(1, secondRow);
+        b0.setPosition(2, secondRow);
+        q0.setPosition(3, secondRow);
+        k0.setPosition(4, secondRow);
+        b1.setPosition(5, secondRow);
+        n1.setPosition(6, secondRow);
+        r1.setPosition(7, secondRow);
     }
 
     public void addChessman(Chessman chessman) {

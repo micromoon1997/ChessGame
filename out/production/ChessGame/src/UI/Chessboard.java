@@ -4,7 +4,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.awt.geom.Line2D;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +56,7 @@ public class Chessboard {
         for (Step s: possibleMoves) {
             final int xx = c.x + s.x;
             final int yy = c.y + c.forward*s.y;
-            if (!isBlockTaken(c.x, c.y, xx, yy)) {
+            if (isValidStep(c.x, c.y, xx, yy)) {
                 JLabel block = new JLabel();
                 block.setBounds(xx*CUBE_WIDTH, yy*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
                 block.setBorder(CYAN_BORDER);
@@ -68,8 +68,8 @@ public class Chessboard {
                     public void mouseClicked(MouseEvent e) {
                         super.mouseClicked(e);
                         c.setPosition(xx, yy);
-                        render();
                         clearBlocks();
+                        render();
                         switchTurn();
                     }
                 });
@@ -78,41 +78,41 @@ public class Chessboard {
         for (Step s: possibleCaps) {
             final int xx = c.x + s.x;
             final int yy = c.y + c.forward*s.y;
+            System.out.println("xx:"+xx);
+            System.out.println("yy:"+yy);
             for (Chessman cc:nextTurn.allChessmen) {
-                if (c.x == cc.x && c.y == cc.y) {
+                if (xx == cc.x && yy == cc.y) {
                     cc.label.setBorder(RED_BORDER);
                 }
             }
         }
     }
 
-    public boolean isBlockTaken(int x0, int y0, int x1, int y1) {
+    /**
+     * check whether a step is valid using Line2D
+     * x0, y0 is the original position
+     * x1, t1 is the position after move    **/
+    public boolean isValidStep(int x0, int y0, int x1, int y1) {
         for (Chessman c: allChessmenOnBoard) {
             if (c.x == x0 && c.y == y0)
                 continue;
-            if (c.x == x1 && c.y == y1)
-                return true;
-            if (x0 == x1)
-                if ((y0 < c.y && c.y < y1) || (y1 < c.y && c.y < y0)) {
-                    return true;
-                } else
-                    continue;
-            if (c.x == x0)
-                continue;
-            if ((float)((y1-y0)/(x1-x0)) == ((float)((c.y-y0)/(c.x-x0))) && x0 < c.x && c.x < x1)
-                return true;
+            if (Line2D.linesIntersect(c.x, c.y, c.x, c.y, x0, y0, x1, y1))
+                return false;
         }
-        return false;
+        return true;
     }
 
     public void clearBlocks() {
-        for (JLabel j: blocks) {
+        for (JLabel j: blocks)
             board.remove(j);
-        }
+        for (Chessman c: nextTurn.allChessmen)
+            c.label.setBorder(null);
         blocks.clear();
+        board.repaint();
     }
 
-    // make sure there is only one ChessBoard instance
+    /**
+     * make sure there is only one ChessBoard instance  **/
     public static Chessboard getInstance() {
         if (instance == null)
             instance = new Chessboard();
@@ -140,7 +140,6 @@ public class Chessboard {
             //c.label.setBounds(c.x*CUBE_WIDTH, c.y*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
             c.label.setLocation(c.x*CUBE_WIDTH, c.y*CUBE_WIDTH);
             c.label.setSize(CUBE_WIDTH, CUBE_WIDTH);
-            board.repaint();
         }
     }
 

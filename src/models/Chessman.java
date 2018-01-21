@@ -24,7 +24,6 @@ public class Chessman {
     private Player player;
 
     public Chessman(Player player) throws IOException{
-        //this.label = new JLabel(new ImageIcon(ImageIO.read()));
         this.player = player;
         clickable = false;
         String fileName = this.getClass().getSimpleName() + "_" + player.side + ".png";
@@ -58,7 +57,7 @@ public class Chessman {
         List<Step> possibleCaps = new ArrayList<>();
         for (Step cap: this.possibleCaps) {
             int xx = this.x + cap.x;
-            int yy = this.x + this.forward * cap.y;
+            int yy = this.y + this.forward * cap.y;
             if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
                 possibleCaps.add(cap);
         }
