@@ -7,7 +7,8 @@ import javax.swing.*;
 public class ChessGame extends JFrame{
 
     public ChessGame() {
-        Chessboard gui = Chessboard.getInstance();
+        Chessboard chessboard = Chessboard.getInstance();
+        chessboard.startGame();
     }
 
     public static void main(String[] args) {

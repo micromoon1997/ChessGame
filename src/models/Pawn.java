@@ -12,24 +12,12 @@ public class Pawn extends Chessman{
     private static final Step cap0 = new Step(1, 1);
     private static final Step cap1 = new Step(-1, 1);
 
-    public Pawn(char side) throws IOException{
-        super (side);
+    public Pawn(Player player) throws IOException{
+        super (player);
         possibleMoves.add(move0);
         possibleMoves.add(move1);
         possibleCaps.add(cap0);
         possibleCaps.add(cap1);
     }
-
-    public List<Step> getValidMoves() {
-        List<Step> validSteps = new ArrayList<>();
-        for (Step move: possibleMoves) {
-            int xx = this.x + this.forward * move.x;
-            int yy = this.x + this.forward * move.y;
-            if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
-                validSteps.add(move);
-        }
-        return validSteps;
-    }
-
 
 }

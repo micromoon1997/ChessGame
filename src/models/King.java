@@ -12,7 +12,7 @@ import java.util.List;
 public class King extends Chessman{
 
 
-    public King(char side) throws IOException{
-        super(side);
+    public King(Player player) throws IOException{
+        super(player);
     }
 }

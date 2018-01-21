@@ -1,4 +1,5 @@
 package models;
+import UI.Chessboard;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -15,19 +16,21 @@ import java.util.List;
 public class Chessman {
     public JLabel label;
     public int x, y;
-    protected char side;
-    protected int forward;
+    public boolean clickable;
+    public int forward;
     protected boolean isAlive;
     protected List<Step> possibleMoves;
     protected List<Step> possibleCaps;
+    private Player player;
 
-    public Chessman(char side) throws IOException{
+    public Chessman(Player player) throws IOException{
         //this.label = new JLabel(new ImageIcon(ImageIO.read()));
-        this.side = side;
-        String fileName = this.getClass().getSimpleName() + "_" + this.side + ".png";
+        this.player = player;
+        clickable = false;
+        String fileName = this.getClass().getSimpleName() + "_" + player.side + ".png";
         File imgFile = new File("./pics/" + fileName);
         label = new JLabel(new ImageIcon(ImageIO.read(imgFile)));
-        if (this.side == 'w')
+        if (player.side == 'w')
             forward = -1;
         else
             forward = 1;
@@ -36,15 +39,42 @@ public class Chessman {
         this.y = -1;
         possibleMoves = new ArrayList<>();
         possibleCaps = new ArrayList<>();
-        enableMouseEvent();
+        addMouseListener();
+        player.addChessman(this);
     }
 
-    //TODO
-    public void enableMouseEvent() {
+    public List<Step> getPossibleMoves() {
+        List<Step> possibleMoves = new ArrayList<>();
+        for (Step move: this.possibleMoves) {
+            int xx = this.x + move.x;
+            int yy = this.y + this.forward * move.y;
+            if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
+                possibleMoves.add(move);
+        }
+        return possibleMoves;
+    }
+
+    public List<Step> getPossibleCaps() {
+        List<Step> possibleCaps = new ArrayList<>();
+        for (Step cap: this.possibleCaps) {
+            int xx = this.x + cap.x;
+            int yy = this.x + this.forward * cap.y;
+            if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
+                possibleCaps.add(cap);
+        }
+        return possibleCaps;
+    }
+
+    public void addMouseListener() {
         label.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("!!!");
+                if (!clickable)
+                    return;
+                System.out.println(player.side);
+                //TODO
+                Chessboard.getInstance().clearBlocks();
+                Chessboard.getInstance().showValidSteps(Chessman.this, getPossibleMoves(), getPossibleCaps());
             }
         });
     }
