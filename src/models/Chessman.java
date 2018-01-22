@@ -21,6 +21,7 @@ public class Chessman {
     public boolean clickable;
     public int forward;
     public Player player;
+    public int stepCounter;
 
     public Chessman(Player player) throws IOException{
         this.player = player;
@@ -38,7 +39,6 @@ public class Chessman {
         possibleSteps = new ArrayList<>();
         addMouseListener();
         player.addChessman(this);
-        label.setLayout(new OverlayLayout(label));
     }
 
     public List<Step> getPossibleSteps() {
@@ -53,7 +53,7 @@ public class Chessman {
     }
 
 
-    public void addMouseListener() {
+    private void addMouseListener() {
         label.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -67,11 +67,14 @@ public class Chessman {
         });
     }
 
-
     // set the x, y position of the chessman
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
+        for (Chessman c: Chessboard.getInstance().allChessmenOnBoard) {
+            if (c instanceof Pawn)
+                ((Pawn) c).canEnpassant = false;
+        }
     }
 
 }

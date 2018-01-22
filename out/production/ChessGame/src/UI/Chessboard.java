@@ -25,8 +25,8 @@ public class Chessboard {
     private static final Color BEIGE = new Color(235, 213, 176);
     private static final Border CYAN_BORDER = BorderFactory.createLineBorder(Color.cyan, 4);
     private static final Border RED_BORDER = BorderFactory.createLineBorder(Color.red, 4);
-    // variables
     private static Chessboard instance;
+    // variables
     private JFrame frame;
     private MyDrawPanel board;
     private Player player1, player2, currTurn, nextTurn;
@@ -38,18 +38,7 @@ public class Chessboard {
     // Constructor
     private Chessboard() {
         setup();
-        //add users
-        player1 = new Player('w');
-        player2 = new Player('b');
-        //add all chessmen to panel
         allChessmenOnBoard = new HashSet<>();
-        allChessmenOnBoard.addAll(player1.allChessmen);
-        allChessmenOnBoard.addAll(player2.allChessmen);
-        System.out.println(allChessmenOnBoard.size());
-        for (Chessman c: allChessmenOnBoard) {
-            board.add(c.label);
-        }
-        render();
     }
 
     // show the valid moves and captures of a chessman on the board
@@ -57,29 +46,7 @@ public class Chessboard {
         List<Step> possibleSteps = currSelected.getPossibleSteps();
         // Special case for pawn
         if (currSelected instanceof Pawn) {
-            for (Step s: possibleSteps) {
-                int xx = currSelected.x + s.x;
-                int yy = currSelected.y + currSelected.forward * s.y;
-                if (currSelected.x == xx) {
-                    boolean canMove = true;
-                    for (Chessman target: allChessmenOnBoard) {
-                        if (target.x == currSelected.x && target.y == currSelected.y)
-                            continue;
-                        if (isPtOnLine(target.x, target.y, currSelected.x, currSelected.y, xx, yy) || (target.x == xx && target.y == yy))
-                            canMove = false;
-//                        if (Line2D.linesIntersect(target.x, target.y, target.x, target.y, currSelected.x, currSelected.y, xx, yy))
-//                            canMove = false;
-                    }
-                    if (canMove)
-                        move(xx, yy);
-                } else {
-                    for (Chessman target: allChessmenOnBoard) {
-                        if (target.x == xx && target.y == yy && target.player.side != currTurn.side)
-                            capture(target);
-                        //TODO Enpassant
-                    }
-                }
-            }
+            showValidStepsPawnSpec(possibleSteps);
             return;
         }
         // other cases
@@ -105,6 +72,36 @@ public class Chessboard {
             }
             if (canMove)
                 move(xx, yy);
+        }
+    }
+
+    private void showValidStepsPawnSpec(List<Step> possibleSteps) {
+        for (Step s: possibleSteps) {
+            int xx = currSelected.x + s.x;
+            int yy = currSelected.y + currSelected.forward * s.y;
+            if (currSelected.x == xx) {
+                boolean canMove = true;
+                for (Chessman target: allChessmenOnBoard) {
+                    if (target.x == currSelected.x && target.y == currSelected.y)
+                        continue;
+                    if (isPtOnLine(target.x, target.y, currSelected.x, currSelected.y, xx, yy)
+                            || (target.x == xx && target.y == yy))
+                        canMove = false;
+                }
+                if (canMove)
+                    move(xx, yy);
+            } else {
+                for (Chessman target: allChessmenOnBoard) {
+                    if (target.x == xx && target.y == yy && target.player.side != currTurn.side)
+                        capture(target);
+                    if (target.x == xx && target.y == currSelected.y
+                            && (currSelected.y == (int)(3.5+currSelected.forward*0.5))
+                            && (target instanceof Pawn)
+                            && ((Pawn) target).canEnpassant) {
+                        Enpassant((Pawn) target);
+                    }
+                }
+            }
         }
     }
 
@@ -146,7 +143,7 @@ public class Chessboard {
 
     }
 
-    private void enPassant(final Chessman target) {
+    private void Enpassant(final Pawn target) {
         final int xx = target.x;
         final int yy = target.y + currSelected.forward;
         JLabel block = new JLabel();
@@ -164,6 +161,10 @@ public class Chessboard {
                 switchTurn();
             }
         });
+    }
+
+    public void pawnPromotion(Pawn pawn) {
+        //TODO
     }
 
     public void clearBlocks() {
@@ -202,21 +203,24 @@ public class Chessboard {
         board.repaint(); //may be no need
     }
 
-    /**
-     * make sure there is only one ChessBoard instance  **/
-    public static Chessboard getInstance() {
-        if (instance == null)
-            instance = new Chessboard();
-        return instance;
-    }
-
     public void startGame() {
+        //add users
+        player1 = new Player('w');
+        player2 = new Player('b');
+        //add all chessmen to panel
+        allChessmenOnBoard.addAll(player1.allChessmen);
+        allChessmenOnBoard.addAll(player2.allChessmen);
+        System.out.println(allChessmenOnBoard.size());
+        for (Chessman c: allChessmenOnBoard) {
+            board.add(c.label);
+        }
+        render();
         currTurn = player1;
         nextTurn = player2;
         player1.enableAllMouseListeners();
     }
 
-    public void switchTurn() {
+    private void switchTurn() {
         clearBlocks();
         currTurn.disableAllMouseListeners();
         Player temp;
@@ -228,7 +232,7 @@ public class Chessboard {
     }
 
     // render all chessmen on the ChessBoard
-    public void render() {
+    private void render() {
         for (Chessman c: allChessmenOnBoard) {
             //c.label.setBounds(c.x*CUBE_WIDTH, c.y*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
             c.label.setLocation(c.x*CUBE_WIDTH, c.y*CUBE_WIDTH);
@@ -250,6 +254,15 @@ public class Chessboard {
         blocks = new HashSet<>();
     }
 
+    /**
+     * make sure there is only one ChessBoard instance  **/
+    public static Chessboard getInstance() {
+        return instance;
+    }
+
+    public static void createInstance() {
+        instance = new Chessboard();
+    }
     private static class MyDrawPanel extends JPanel {
         public void paintComponent(Graphics G) {
             // draw the chessboard

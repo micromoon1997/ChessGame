@@ -7,6 +7,7 @@ import javax.swing.*;
 public class ChessGame extends JFrame{
 
     public ChessGame() {
+        Chessboard.createInstance();
         Chessboard chessboard = Chessboard.getInstance();
         chessboard.startGame();
     }

@@ -5,13 +5,13 @@ import java.util.List;
 
 
 public class Player{
+    private Pawn p0, p1, p2, p3, p4, p5, p6, p7;
+    private Rook r0, r1;
+    private Knight n0, n1;
+    private Bishop b0, b1;
+    private King k0;
+    private Queen q0;
     public char side;
-    public Pawn p0, p1, p2, p3, p4, p5, p6, p7;
-    public Rook r0, r1;
-    public Knight n0, n1;
-    public Bishop b0, b1;
-    public King k0;
-    public Queen q0;
     public List<Chessman> allChessmen;
 
     // A player object
@@ -39,7 +39,6 @@ public class Player{
             b1 = new Bishop(this);
             n1 = new Knight(this);
             r1 = new Rook(this);
-            //todo
             initChessmenPosition();
         } catch (IOException e) {
             //todo
@@ -47,7 +46,6 @@ public class Player{
     }
 
 
-    // TODO
     private void initChessmenPosition() {
         int forward;
         if (this.side == 'w')
