@@ -4,12 +4,12 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Line2D;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import models.Chessman;
+import models.Pawn;
 import models.Player;
 import models.Step;
 
@@ -32,7 +32,7 @@ public class Chessboard {
     private Player player1, player2, currTurn, nextTurn;
     private Set<JLabel> blocks;
     public Set<Chessman> allChessmenOnBoard;
-    public Chessman currSlected;
+    public Chessman currSelected;
 
 
     // Constructor
@@ -53,65 +53,146 @@ public class Chessboard {
     }
 
     // show the valid moves and captures of a chessman on the board
-    public void showValidSteps(final Chessman c, List<Step> possibleMoves, List<Step> possibleCaps) {
-        for (Step s: possibleMoves) {
-            final int xx = c.x + s.x;
-            final int yy = c.y + c.forward*s.y;
-            if (isValidStep(c.x, c.y, xx, yy)) {
-                JLabel block = new JLabel();
-                block.setBounds(xx*CUBE_WIDTH, yy*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
-                block.setBorder(CYAN_BORDER);
-                blocks.add(block);
-                board.add(block);
-                board.repaint();
-                block.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        super.mouseClicked(e);
-                        c.setPosition(xx, yy);
-                        clearBlocks();
-                        render();
-                        switchTurn();
+    public void showValidSteps() {
+        List<Step> possibleSteps = currSelected.getPossibleSteps();
+        // Special case for pawn
+        if (currSelected instanceof Pawn) {
+            for (Step s: possibleSteps) {
+                int xx = currSelected.x + s.x;
+                int yy = currSelected.y + currSelected.forward * s.y;
+                if (currSelected.x == xx) {
+                    boolean canMove = true;
+                    for (Chessman target: allChessmenOnBoard) {
+                        if (target.x == currSelected.x && target.y == currSelected.y)
+                            continue;
+                        if (isPtOnLine(target.x, target.y, currSelected.x, currSelected.y, xx, yy) || (target.x == xx && target.y == yy))
+                            canMove = false;
+//                        if (Line2D.linesIntersect(target.x, target.y, target.x, target.y, currSelected.x, currSelected.y, xx, yy))
+//                            canMove = false;
                     }
-                });
-            }
-        }
-        for (Step s: possibleCaps) {
-            final int xx = c.x + s.x;
-            final int yy = c.y + c.forward*s.y;
-            System.out.println("xx:"+xx);
-            System.out.println("yy:"+yy);
-            for (Chessman cc:nextTurn.allChessmen) {
-                if (xx == cc.x && yy == cc.y) {
-                    cc.label.setBorder(RED_BORDER);
-                    cc.clickable = true;
-                    cc.canBeCaptured = true;
+                    if (canMove)
+                        move(xx, yy);
+                } else {
+                    for (Chessman target: allChessmenOnBoard) {
+                        if (target.x == xx && target.y == yy && target.player.side != currTurn.side)
+                            capture(target);
+                        //TODO Enpassant
+                    }
                 }
             }
+            return;
+        }
+        // other cases
+        for (Step s : possibleSteps) {
+            int xx = currSelected.x + s.x;
+            int yy = currSelected.y + currSelected.forward * s.y;
+            boolean canMove = true;
+            for (Chessman c: allChessmenOnBoard) {
+                if (isPtOnLine(c.x, c.y, currSelected.x, currSelected.y, xx, yy)) {
+                    canMove = false;
+                    break;
+                }
+            }
+            if (canMove) {
+                for (Chessman target: allChessmenOnBoard) {
+                    if (target.x == xx && target.y == yy) {
+                        if (target.player.side == currTurn.side)
+                            canMove = false;
+                        else
+                            capture(target);
+                    }
+                }
+            }
+            if (canMove)
+                move(xx, yy);
         }
     }
 
-    /**
-     * check whether a step is valid using Line2D
-     * x0, y0 is the original position
-     * x1, t1 is the position after move    **/
-    public boolean isValidStep(int x0, int y0, int x1, int y1) {
-        for (Chessman c: allChessmenOnBoard) {
-            if (c.x == x0 && c.y == y0)
-                continue;
-            if (Line2D.linesIntersect(c.x, c.y, c.x, c.y, x0, y0, x1, y1))
-                return false;
-        }
-        return true;
+    private void move(final int xx, final int yy) {
+        JLabel block = new JLabel();
+        block.setBounds(xx*CUBE_WIDTH, yy*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
+        block.setBorder(CYAN_BORDER);
+        blocks.add(block);
+        board.add(block);
+        board.repaint();
+        block.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                currSelected.setPosition(xx, yy);
+                switchTurn();
+            }
+        });
+    }
+
+    private void capture(final Chessman target) {
+        final int xx = target.x;
+        final int yy = target.y;
+        JLabel block = new JLabel();
+        block.setBounds(0, 0, CUBE_WIDTH, CUBE_WIDTH);
+        block.setBorder(RED_BORDER);
+        blocks.add(block);
+        target.label.add(block);
+        board.repaint();
+        block.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                removeChessman(target);
+                currSelected.setPosition(xx, yy);
+                switchTurn();
+            }
+        });
+
+    }
+
+    private void enPassant(final Chessman target) {
+        final int xx = target.x;
+        final int yy = target.y + currSelected.forward;
+        JLabel block = new JLabel();
+        block.setBounds(xx*CUBE_WIDTH, yy*CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
+        block.setBorder(RED_BORDER);
+        blocks.add(block);
+        board.add(block);
+        board.repaint();
+        block.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                removeChessman(target);
+                currSelected.setPosition(xx, yy);
+                switchTurn();
+            }
+        });
     }
 
     public void clearBlocks() {
         for (JLabel j: blocks)
             board.remove(j);
         for (Chessman c: nextTurn.allChessmen)
-            c.label.setBorder(null);
+            c.label.removeAll();
         blocks.clear();
         board.repaint();
+    }
+
+    /**
+     * Check whether a point is on the given line exclude two ends **/
+    private boolean isPtOnLine(int px, int py, int lx1, int ly1, int lx2, int ly2) {
+        int dxc = px - lx1;
+        int dyc = py - ly1;
+        int dxl = lx2 - lx1;
+        int dyl = ly2 - ly1;
+        int cross = dxc * dyl - dyc * dxl;
+        if (cross != 0 )
+            return false;
+        if (Math.abs(dxl) >= Math.abs(dyl))
+            return dxl > 0 ?
+                    lx1 < px && px < lx2 :
+                    lx2 < px && px < lx1;
+        else
+            return dyl > 0 ?
+                    ly1 < py && py < ly2 :
+                    ly2 < py && py < ly1;
     }
 
     public void removeChessman(Chessman c) {
@@ -136,13 +217,13 @@ public class Chessboard {
     }
 
     public void switchTurn() {
+        clearBlocks();
         currTurn.disableAllMouseListeners();
         Player temp;
         temp = currTurn;    //swap
         currTurn = nextTurn;
         nextTurn = temp;
         currTurn.enableAllMouseListeners();
-        clearBlocks();
         render();
     }
 

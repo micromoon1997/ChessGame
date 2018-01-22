@@ -15,11 +15,10 @@ import java.util.List;
 
 public class Chessman {
     protected boolean isAlive;
-    protected List<Step> possibleMoves;
-    protected List<Step> possibleCaps;
+    protected List<Step> possibleSteps;
     public JLabel label;
     public int x, y;
-    public boolean clickable, canBeCaptured;
+    public boolean clickable;
     public int forward;
     public Player player;
 
@@ -36,15 +35,15 @@ public class Chessman {
         isAlive = true;
         this.x = -1;
         this.y = -1;
-        possibleMoves = new ArrayList<>();
-        possibleCaps = new ArrayList<>();
+        possibleSteps = new ArrayList<>();
         addMouseListener();
         player.addChessman(this);
+        label.setLayout(new OverlayLayout(label));
     }
 
-    public List<Step> getPossibleMoves() {
+    public List<Step> getPossibleSteps() {
         List<Step> possibleMoves = new ArrayList<>();
-        for (Step move: this.possibleMoves) {
+        for (Step move: this.possibleSteps) {
             int xx = this.x + move.x;
             int yy = this.y + this.forward * move.y;
             if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
@@ -53,16 +52,6 @@ public class Chessman {
         return possibleMoves;
     }
 
-    public List<Step> getPossibleCaps() {
-        List<Step> possibleCaps = new ArrayList<>();
-        for (Step cap: this.possibleCaps) {
-            int xx = this.x + cap.x;
-            int yy = this.y + this.forward * cap.y;
-            if (0 <= xx && xx <= 7 && 0 <= yy && yy <= 7)
-                possibleCaps.add(cap);
-        }
-        return possibleCaps;
-    }
 
     public void addMouseListener() {
         label.addMouseListener(new MouseAdapter() {
@@ -70,19 +59,10 @@ public class Chessman {
             public void mouseClicked(MouseEvent e) {
                 if (!clickable)
                     return;
-                if (canBeCaptured) {
-                    for (Chessman c: player.allChessmen)
-                        c.canBeCaptured = false;
-                    Chessboard.getInstance().removeChessman(Chessman.this);
-                    Chessboard.getInstance().currSlected.setPosition(x, y);
-                    Chessboard.getInstance().switchTurn();
-                    return;
-                }
                 System.out.println(player.side);
-                //TODO
-                Chessboard.getInstance().currSlected = Chessman.this;
+                Chessboard.getInstance().currSelected = Chessman.this;
                 Chessboard.getInstance().clearBlocks();
-                Chessboard.getInstance().showValidSteps(Chessman.this, getPossibleMoves(), getPossibleCaps());
+                Chessboard.getInstance().showValidSteps();
             }
         });
     }

@@ -47,7 +47,6 @@ public class Player{
     }
 
 
-    // TODO
     private void initChessmenPosition() {
         int forward;
         if (this.side == 'w')
