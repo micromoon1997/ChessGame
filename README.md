@@ -1,2 +1,2 @@
 # ChessGame
-A simple chess game with GUI
+A two-player chess game with GUI
